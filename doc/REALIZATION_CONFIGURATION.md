@@ -34,6 +34,7 @@ The `global` key-value object must contain the following two object keys:
 * `forcing`
   * key-value object with keys for `file_pattern` and `path` that define the default CSV file pattern and path for the input forcings relative to the executable directory. More recently, `ngen` developed the capability to handle forcing data in different formats. Thus, a `provider` value parameter can be used to explicitly define the format of the forcing data, such as NetCDF format, in the form "provider": "NetCDF".
   * When using the NetCDF provider, the optional parameter `"enable_cache"` can be added to enable or disable ngen's internal forcing cache. This defaults to  `true` when omitted. Disabling the cache will generally reduce performance, except in parallel on systems experiencing disk I/O bottlenecks.
+  * When using the NetCDF provider, the optional parameter `"load_in_memory"` can be set to `true` to read the whole forcing file into memory once when it is opened, instead of reading from disk at each time step. This defaults to `false` when omitted. Each process then holds a copy of the file, so memory use grows by about the file's size per process.
 
 ```
 "global": {

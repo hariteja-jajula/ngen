@@ -41,11 +41,12 @@ struct forcing_params
   time_t simulation_start_t;
   time_t simulation_end_t;
   bool enable_cache = true;
+  bool load_in_memory = false;
   /*
     Constructor for forcing_params
   */
-  forcing_params(std::string path, std::string provider, std::string start_time, std::string end_time, bool enable_cache) :
-    path(path), provider(provider), start_time(start_time), end_time(end_time), enable_cache(enable_cache)
+  forcing_params(std::string path, std::string provider, std::string start_time, std::string end_time, bool enable_cache, bool load_in_memory) :
+    path(path), provider(provider), start_time(start_time), end_time(end_time), enable_cache(enable_cache), load_in_memory(load_in_memory)
     {
       /// \todo converting to UTC can be tricky, especially if thread safety is a concern
       /* https://stackoverflow.com/questions/530519/stdmktime-and-timezone-info */

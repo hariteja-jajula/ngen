@@ -61,9 +61,9 @@ void NetCDFPerFeatureDataProviderTest::setupForcing()
     std::string forcing_file_name = utils::FileChecker::find_first_readable(forcing_file_names);
 
     // Using this to compute epoch times... this is what's done in Formulation_Constructors.hpp, FWIW...
-    forcing_params forcing_p(forcing_file_name, "NetCDF", "2015-12-01 00:00:00", "2015-12-30 23:00:00");
+    forcing_params forcing_p(forcing_file_name, "NetCDF", "2015-12-01 00:00:00", "2015-12-30 23:00:00", true, false);
 
-    nc_provider = std::make_shared<data_access::NetCDFPerFeatureDataProvider>(forcing_file_name, forcing_p.simulation_start_t, forcing_p.simulation_end_t, utils::getStdErr() );
+    nc_provider = std::make_shared<data_access::NetCDFPerFeatureDataProvider>(forcing_file_name, forcing_p.simulation_start_t, forcing_p.simulation_end_t, utils::getStdErr(), true, false );
     start_date_time = std::make_shared<time_type>();
     end_date_time = std::make_shared<time_type>();
 }
@@ -113,5 +113,29 @@ TEST_F(NetCDFPerFeatureDataProviderTest, TestForcingDataRead)
         double val4 = nc_provider->get_value(CatchmentAggrDataSelector(ids[0], "T3D", start_time, duration, "K"), data_access::MEAN);, 
         std::runtime_error);
     
+}
+
+///Test that reading the file into memory gives the same values as reading from disk
+TEST_F(NetCDFPerFeatureDataProviderTest, TestForcingDataReadInMemory)
+{
+    std::vector<std::string> forcing_file_names = {
+        "data/forcing/cats-27_52_67-2015_12_01-2015_12_30.nc",
+        "../data/forcing/cats-27_52_67-2015_12_01-2015_12_30.nc",
+        "../../data/forcing/cats-27_52_67-2015_12_01-2015_12_30.nc"
+        };
+    std::string forcing_file_name = utils::FileChecker::find_first_readable(forcing_file_names);
+    forcing_params forcing_p(forcing_file_name, "NetCDF", "2015-12-01 00:00:00", "2015-12-30 23:00:00", true, true);
+
+    auto mem_provider = std::make_shared<data_access::NetCDFPerFeatureDataProvider>(forcing_file_name, forcing_p.simulation_start_t, forcing_p.simulation_end_t, utils::getStdErr(), true, true);
+
+    auto start_time = nc_provider->get_data_start_time();
+    auto duration = nc_provider->record_duration();
+
+    for (const auto& id : nc_provider->get_ids()) {
+        for (int i = 0; i < 4; i++) {
+            auto selector = CatchmentAggrDataSelector(id, CSDMS_STD_NAME_SURFACE_TEMP, start_time + i * duration, duration, "K");
+            EXPECT_EQ(mem_provider->get_value(selector, data_access::MEAN), nc_provider->get_value(selector, data_access::MEAN));
+        }
+    }
 }
 #endif

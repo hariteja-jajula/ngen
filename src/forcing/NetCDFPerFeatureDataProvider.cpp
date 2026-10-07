@@ -10,14 +10,14 @@ std::map<std::string, std::shared_ptr<data_access::NetCDFPerFeatureDataProvider>
 
 namespace data_access {
 
-std::shared_ptr<NetCDFPerFeatureDataProvider> NetCDFPerFeatureDataProvider::get_shared_provider(std::string input_path, time_t sim_start, time_t sim_end, utils::StreamHandler log_s, bool enable_cache)
+std::shared_ptr<NetCDFPerFeatureDataProvider> NetCDFPerFeatureDataProvider::get_shared_provider(std::string input_path, time_t sim_start, time_t sim_end, utils::StreamHandler log_s, bool enable_cache, bool load_in_memory)
 {
     const std::lock_guard<std::mutex> lock(shared_providers_mutex);
     std::shared_ptr<NetCDFPerFeatureDataProvider> p;
     if(shared_providers.count(input_path) > 0){
         p = shared_providers[input_path];
     } else {
-        p = std::make_shared<data_access::NetCDFPerFeatureDataProvider>(input_path, sim_start, sim_end, log_s, enable_cache);
+        p = std::make_shared<data_access::NetCDFPerFeatureDataProvider>(input_path, sim_start, sim_end, log_s, enable_cache, load_in_memory);
         shared_providers[input_path] = p;
     }
     return p;
@@ -30,7 +30,7 @@ void NetCDFPerFeatureDataProvider::cleanup_shared_providers()
     shared_providers.clear();
 }
 
-NetCDFPerFeatureDataProvider::NetCDFPerFeatureDataProvider(std::string input_path, time_t sim_start, time_t sim_end,  utils::StreamHandler log_s, bool enable_cache) : log_stream(log_s), value_cache(20),
+NetCDFPerFeatureDataProvider::NetCDFPerFeatureDataProvider(std::string input_path, time_t sim_start, time_t sim_end,  utils::StreamHandler log_s, bool enable_cache, bool load_in_memory) : log_stream(log_s), value_cache(20),
     sim_start_date_time_epoch(sim_start),
     sim_end_date_time_epoch(sim_end),
     enable_cache(enable_cache)
@@ -40,7 +40,12 @@ NetCDFPerFeatureDataProvider::NetCDFPerFeatureDataProvider(std::string input_pat
     //nc_set_chunk_cache(sizep, nelemsp, preemptionp);
 
     //open the file
-    nc_file = std::make_shared<netCDF::NcFile>(input_path, NC_NOWRITE | NC_DISKLESS); // read the whole file into memory once
+    if (load_in_memory) {
+        // read the whole file into memory once; costs about the file's size per process
+        nc_file = std::make_shared<netCDF::NcFile>(input_path, NC_NOWRITE | NC_DISKLESS);
+    } else {
+        nc_file = std::make_shared<netCDF::NcFile>(input_path, netCDF::NcFile::read);
+    }
     
     //nc_get_chunk_cache(&sizep, &nelemsp, &preemptionp);
     //std::cout << "Chunk cache parameters: "<<sizep<<", "<<nelemsp<<", "<<preemptionp<<std::endl;

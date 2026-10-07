@@ -432,6 +432,12 @@ namespace realization {
                     enable_cache = forcing_prop_map.at("enable_cache").as_boolean();
                 }
 
+                bool load_in_memory = false;
+
+                if (forcing_prop_map.count("load_in_memory") != 0) {
+                    load_in_memory = forcing_prop_map.at("load_in_memory").as_boolean();
+                }
+
                 std::string path = "";
                 if(forcing_prop_map.count("path") != 0){
                     path = forcing_prop_map.at("path").as_string();
@@ -446,7 +452,8 @@ namespace realization {
                         provider,
                         simulation_time_config.start_time,
                         simulation_time_config.end_time,
-                        enable_cache
+                        enable_cache,
+                        load_in_memory
                     );
                 }
 
@@ -537,7 +544,8 @@ namespace realization {
                         provider,
                         simulation_time_config.start_time,
                         simulation_time_config.end_time,
-                        enable_cache
+                        enable_cache,
+                        load_in_memory
                     );
                 }
 
@@ -555,7 +563,8 @@ namespace realization {
                                 provider,
                                 simulation_time_config.start_time,
                                 simulation_time_config.end_time,
-                                enable_cache
+                                enable_cache,
+                                load_in_memory
                             );
                         }
                     }
